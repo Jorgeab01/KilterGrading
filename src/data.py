@@ -8,13 +8,16 @@ roles = dict(pd.read_sql("SELECT id, name FROM placement_roles", conn).values)
 hold_data = pd.read_sql("SELECT id, x, y FROM holes", conn).values
 holds = {row[0]: (row[1], row[2]) for row in hold_data}
 
-def getHolds(route):
+def get_holds(route):
 
     """
     Parses a route frame into a list of holds with their board position and role.
 
-    Args: Route, row from kilter_train/val/test, must contain 'frames'.
-    Returns: List of (x, y, role) tuples, one per hold in the frame.
+    Args:
+        route: row from kilter_train/val/test, must contain 'frames'.
+
+    Returns:
+        List of (x, y, role) tuples, one per hold in the frame.
     """
 
     # Format: p<placement_id>r<role_id>...
@@ -34,13 +37,16 @@ def getHolds(route):
 
     return res
 
-def getAvgDist(route_holds):
+def get_avg_nearest_hold_dist(route_holds):
 
     """
-    Calculates the average distance between the holds of the given route
+    Calculates the average distance between the nearest holds of the given route.
 
-    Args: route holds, list of (x, y) tuples
-    Returns: Average distance from each hold to its closest other hold
+    Args:
+        route_holds: list of (x, y) tuples.
+
+    Returns:
+        Average distance from each hold to its closest other hold.
     """
 
     distances = []
@@ -60,19 +66,21 @@ def getAvgDist(route_holds):
 
 
 
-def getFeatures(route):
+def get_features(route):
 
     """
     Converts the given route to a feature dict that can be used as one row of the training table.
 
-    Args: Route, row from kilter_train/val/test, must contain 'frames'.
-    Returns: Feature dictionary: Angle, number of holds, hold count by type, and the avg distance 
-        between holds.
+    Args:
+        route: row from kilter_train/val/test, must contain 'frames'.
 
+    Returns:
+        Feature dictionary containing the angle, number of holds, hold
+        counts by type, and average nearest-hold distance.
     """
 
     route_angle = int(route['angle'])
-    route_holds = getHolds(route)
+    route_holds = get_holds(route)
 
     role_list = [r[2] for r in route_holds]
     num_start = role_list.count('start')
@@ -80,7 +88,7 @@ def getFeatures(route):
     num_foot = role_list.count('foot')
     num_finish = role_list.count('finish')
 
-    avg_dist = getAvgDist([(x, y) for x, y, role in route_holds if role != 'foot'])
+    avg_nearest_hold_dist = get_avg_nearest_hold_dist([(x, y) for x, y, role in route_holds if role != 'foot'])
 
     return {
         "angle": route_angle,
@@ -89,7 +97,7 @@ def getFeatures(route):
         "num_middle": num_middle,
         "num_foot": num_foot,
         "num_finish": num_finish,
-        "avg_dist": avg_dist,
+        "avg_nearest_hold_dist": avg_nearest_hold_dist
     }
 
 
@@ -98,8 +106,11 @@ def process_data(data_type):
     """
     Create a csv with a list of the features of each route of the chosen data type.
 
-    Args: Data type: test, train or val
-    Raises: ValueError if data_type is not one of the three valid options.
+    Args:
+        data_type: "test", "train" or "val".
+
+    Raises:
+        ValueError: if data_type is not one of the three valid options.
     """
 
     if data_type not in ("test", "train", "val"):
@@ -112,18 +123,20 @@ def process_data(data_type):
 
     for _, row in routes.iterrows():
         try:
-            features = getFeatures(row)
+            features = get_features(row)
             features["grade"] = row["difficulty_numeric"]
             res.append(features)
         except Exception as e:
             errors.append((row['uuid'], str(e)))
 
-    print(f"filas procesadas: {len(res)}, errores: {len(errors)}")
+    print(f"processed rows: {len(res)}, errors: {len(errors)}")
 
     data = pd.DataFrame(res)
     data.to_csv(f"data/{data_type}_features.csv", index=False)
 
 
-process_data("train")
-process_data("val")
-process_data("test")
+if __name__ == "__main__":
+
+    process_data("train")
+    process_data("val")
+    process_data("test")
