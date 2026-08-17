@@ -19,10 +19,22 @@ BASE_FEATURES = [
     "avg_nearest_hold_dist",
 ]
 
+GEOMETRIC_FEATURES = [
+    "max_nearest_hold_dist",
+    "route_width",
+    "route_height",
+    "foot_ratio",
+    "middle_ratio",
+]
+
 
 ITERATIONS = {
     1: {
         "features": BASE_FEATURES,
+        "model_params": {},
+    },
+    2: {
+        "features": BASE_FEATURES + GEOMETRIC_FEATURES,
         "model_params": {},
     },
 }

@@ -63,8 +63,78 @@ def get_avg_nearest_hold_dist(route_holds):
 
     return sum(distances) / len(distances)
 
+def get_max_nearest_hold_dist(route_holds):
 
+    """
+    Calculates the max distance between the nearest holds of the given route.
 
+    Args:
+        route_holds: list of (x, y) tuples.
+
+    Returns:
+        Max distance between nearest holds.
+    """
+
+    max_distance = 0
+
+    for h in route_holds:
+        closest_dist = None
+        for j in route_holds:
+            if j is h:
+                continue
+            dist = ((h[0] - j[0]) ** 2 + (h[1] - j[1]) ** 2) ** 0.5
+            if closest_dist is None or dist < closest_dist:
+                closest_dist = dist
+        if closest_dist > max_distance:
+            max_distance = closest_dist
+
+    return max_distance
+
+def get_route_width(route_holds):
+
+    """
+    Calculates the width of the route
+
+    Args:
+        route_holds: list of (x, y) tuples.
+
+    Returns:
+        Width of the route
+    """
+
+    min_x = None
+    max_x = None
+
+    for h in route_holds:
+        if max_x is None or h[0] > max_x:
+            max_x = h[0]
+        if min_x is None or h[0] < min_x:
+            min_x = h[0]
+
+    return max_x - min_x
+
+def get_route_height(route_holds):
+
+    """
+    Calculates the height of the route
+
+    Args:
+        route_holds: list of (x, y) tuples.
+
+    Returns:
+        Height of the route
+    """
+
+    min_y = None
+    max_y = None
+
+    for h in route_holds:
+        if max_y is None or h[1] > max_y:
+            max_y = h[1]
+        if min_y is None or h[1] < min_y:
+            min_y = h[1]
+
+    return max_y - min_y
 
 def get_features(route):
 
@@ -88,16 +158,31 @@ def get_features(route):
     num_foot = role_list.count('foot')
     num_finish = role_list.count('finish')
 
-    avg_nearest_hold_dist = get_avg_nearest_hold_dist([(x, y) for x, y, role in route_holds if role != 'foot'])
+    no_foot_holds = [(x, y) for x, y, role in route_holds if role != 'foot']
+
+    avg_nearest_hold_dist = get_avg_nearest_hold_dist(no_foot_holds)
+    max_nearest_hold_dist = get_max_nearest_hold_dist(no_foot_holds)
+
+    route_width = get_route_width(route_holds)
+    route_height = get_route_height(route_holds)
+
+    num_holds = len(route_holds)
+    foot_ratio = num_foot / num_holds
+    middle_ratio = num_middle / num_holds
 
     return {
         "angle": route_angle,
-        "num_holds": len(route_holds),
+        "num_holds": num_holds,
         "num_start": num_start,
         "num_middle": num_middle,
         "num_foot": num_foot,
         "num_finish": num_finish,
-        "avg_nearest_hold_dist": avg_nearest_hold_dist
+        "avg_nearest_hold_dist": avg_nearest_hold_dist,
+        "max_nearest_hold_dist": max_nearest_hold_dist,
+        "route_width": route_width,
+        "route_height": route_height,
+        "foot_ratio": foot_ratio,
+        "middle_ratio": middle_ratio
     }
 
 

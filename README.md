@@ -20,12 +20,9 @@ on 190k already graded climbs.
 
 ## How
 
-Each climb is converted into a feature vector: wall angle, number of holds,
-hold counts by role (start, middle, foot, finish), and the average
-nearest-hold distance.
-
-These features and the real community grade are used to train an XGBoost
-model that learns the relationship between hold layout and difficulty.
+Each climb's hold layout and wall angle are parsed into a set of features, 
+then used with the real community grade to train an XGBoost model that learns 
+the relationship between hold layout and difficulty.
 
 ## Data
 
@@ -57,15 +54,14 @@ for that number, or loads the saved one and just evaluates it.
 
 ## Results
 
-Current validation MAE: **2.42**.
+Current validation MAE: **2.07**.
 
-Uses basic route features such as wall angle, number of holds, hold
-roles, and average nearest-hold distance. This model serves as the baseline
-for comparing future changes to the feature set and model parameters.
+Last iteration uses features that describe the shape of the route, not 
+just counts: biggest reach between holds, how far the route spreads 
+sideways and up, and hold-type proportions. 
 
 See [ITERATIONS.md](ITERATIONS.md) for the details and results of each
 iteration.
-
 
 ## Roadmap
 
